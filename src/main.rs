@@ -1,4 +1,3 @@
-use anyhow::Result;
 use bech32::{self, FromBase32, ToBase32};
 use clap::{App, Arg};
 use std::io::{stdin, stdout, Read, Write};
@@ -7,7 +6,7 @@ use std::str;
 
 fn main() {
     let matches = App::new("bech32")
-        .version("0.0.1")
+        .version("0.1.0")
         .arg(
             Arg::with_name("data")
                 .takes_value(true)
@@ -39,6 +38,8 @@ Example) \"cm\" is the prefix for cm1vfjkx6zlxve97cmvd90ksetvwq0h3xcp",
         }
     };
 }
+
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 fn execute(matches: clap::ArgMatches) -> Result<()> {
     match matches.value_of("data") {
