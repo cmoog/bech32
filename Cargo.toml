@@ -1,0 +1,11 @@
+[package]
+name = "bech32"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bech32 = "0.7.3"
+clap = "2.27.0"
+anyhow = "1.0.25"
