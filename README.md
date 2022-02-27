@@ -12,7 +12,7 @@ cargo install --git https://github.com/cmoog/bech32
 ## Usage
 
 ```
-bech32 0.0.1
+bech32 0.1.0
 
 USAGE:
     bech32 [FLAGS] [OPTIONS] [data]
