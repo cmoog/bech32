@@ -50,16 +50,15 @@ fn execute(matches: clap::ArgMatches) -> Result<()> {
         None | Some("-") => {
             let mut buf = Vec::new();
             // TODO: read in chunks
-            let stdin = stdin();
-            stdin.lock().read_to_end(&mut buf)?;
-            process_line(&matches, buf)?;
+            stdin().read_to_end(&mut buf)?;
+            process_buf(&matches, buf)?;
         }
-        Some(data) => process_line(&matches, data.into())?,
+        Some(data) => process_buf(&matches, data.into())?,
     }
     Ok(())
 }
 
-fn process_line(matches: &clap::ArgMatches, data: Vec<u8>) -> Result<()> {
+fn process_buf(matches: &clap::ArgMatches, data: Vec<u8>) -> Result<()> {
     if matches.is_present(ARG_DECODE) {
         let mut raw = str::from_utf8(data.as_slice())?;
 
