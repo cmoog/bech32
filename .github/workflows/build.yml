@@ -1,0 +1,18 @@
+name: Build
+on:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: cachix/install-nix-action@v15
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - name: Build
+        run: nix build
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: bech32_${{ runner.os }}_${{ runner.arch }}
+          path: ./result/bin/bech32

@@ -9,6 +9,10 @@ A small command-line utility for encoding and decoding bech32 strings.
 cargo install --git https://github.com/cmoog/bech32
 ```
 
+```
+nix shell github:cmoog/bech32
+```
+
 ## Usage
 
 ```
