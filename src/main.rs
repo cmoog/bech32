@@ -34,13 +34,10 @@ Example) \"cm\" is the prefix for cm1vfjkx6zlxve97cmvd90ksetvwq0h3xcp",
         )
         .get_matches();
 
-    match execute(matches) {
-        Ok(_) => {}
-        Err(e) => {
-            eprintln!("{}", e);
-            process::exit(1);
-        }
-    };
+    if let Err(e) = execute(matches) {
+        eprintln!("{}", e);
+        process::exit(1);
+    }
 }
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -60,12 +57,11 @@ fn execute(matches: clap::ArgMatches) -> Result<()> {
 
 fn process_buf(matches: &clap::ArgMatches, data: Vec<u8>) -> Result<()> {
     if matches.is_present(ARG_DECODE) {
-        let mut raw = str::from_utf8(data.as_slice())?;
-
-        // trim trailing newline
-        // This is a hack and should probably be removed, but it
-        // ensures compatibility with simple usages of "echo", "cat", etc.
-        raw = raw.trim_end_matches("\n");
+        let raw = str::from_utf8(data.as_slice())?
+            // trim trailing newline
+            // This is a hack and should probably be removed, but it
+            // ensures compatibility with simple usages of "echo", "cat", etc.
+            .trim_end_matches("\n");
 
         let (_, base32) = bech32::decode(raw)?;
         let buf = Vec::<u8>::from_base32(&base32)?;

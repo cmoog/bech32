@@ -1,9 +1,9 @@
 [package]
-authors = ["Charlie Moog <moogcharlie@gmail.com>"]
 name = "bech32"
 version = "0.1.0"
-edition = "2021"
 license = "MIT"
+authors = ["Charlie Moog <moogcharlie@gmail.com>"]
+edition = "2021"
 
 [dependencies]
 bech32 = "0.7.3"
