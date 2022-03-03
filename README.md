@@ -5,9 +5,13 @@ A small command-line utility for encoding and decoding bech32 strings.
 
 ## Installation
 
+**Cargo**
+
 ```
 cargo install --git https://github.com/cmoog/bech32
 ```
+
+**Nix Flakes**
 
 ```
 nix shell github:cmoog/bech32
