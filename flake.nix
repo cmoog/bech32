@@ -1,36 +1,72 @@
 {
-  description = "A simple command-line utilty for encoding and decoding bech32 strings.";
+  description = "A small command-line utility for encoding and decoding bech32 strings.";
 
   inputs = {
-    nixpkgs.url = github:NixOS/nixpkgs/nixos-21.11;
-    import-cargo.url = github:edolstra/import-cargo;
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    utils.url = "github:numtide/flake-utils";
+    rust-overlay.url = "github:oxalica/rust-overlay";
+    crate2nix = {
+      url = "github:kolloch/crate2nix";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, import-cargo }:
+  outputs = { self, nixpkgs, utils, rust-overlay, crate2nix, ... }:
     let
-      inherit (import-cargo.builders) importCargo;
+      name = "bech32";
+      rustChannel = "stable";
     in
-    {
+    utils.lib.eachDefaultSystem
+      (system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [
+              rust-overlay.overlay
+              (self: super: {
+                rustc = self.rust-bin.${rustChannel}.latest.default;
+                cargo = self.rust-bin.${rustChannel}.latest.default;
+              })
+            ];
+          };
+          inherit (import "${crate2nix}/tools.nix" { inherit pkgs; })
+            generatedCargoNix;
 
-      defaultPackage.x86_64-linux =
-        with import nixpkgs { system = "x86_64-linux"; };
-        stdenv.mkDerivation {
-          name = "bech32";
-          src = self;
+          project = import
+            (generatedCargoNix {
+              inherit name;
+              src = ./.;
+            })
+            { inherit pkgs; };
 
-          nativeBuildInputs = [
-            (importCargo { lockFile = ./Cargo.lock; inherit pkgs; }).cargoHome
-            rustc
-            cargo
-          ];
+          # Configuration for the non-Rust dependencies
+          buildInputs = [ ];
+          nativeBuildInputs = with pkgs;
+            [ rustc cargo ];
+        in
+        rec {
+          packages.${name} = project.rootCrate.build;
 
-          buildPhase = ''
-            cargo build --release --offline
-          '';
+          # `nix build`
+          defaultPackage = packages.${name};
 
-          installPhase = ''
-            install -Dm775 ./target/release/bech32 $out/bin/bech32
-          '';
-        };
-    };
+          # `nix run`
+          apps.${name} = utils.lib.mkApp {
+            inherit name;
+            drv = packages.${name};
+          };
+          defaultApp = apps.${name};
+
+          # `nix develop`
+          devShell = pkgs.mkShell
+            {
+              inputsFrom = builtins.attrValues self.packages.${system};
+              buildInputs = buildInputs ++ (with pkgs;
+                [
+                  pkgs.rust-bin.${rustChannel}.latest.rust-analysis
+                ]);
+              RUST_SRC_PATH = "${pkgs.rust-bin.${rustChannel}.latest.rust-src}/lib/rustlib/src/rust/library";
+            };
+        }
+      );
 }
