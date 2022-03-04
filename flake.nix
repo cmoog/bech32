@@ -2,35 +2,37 @@
   description = "A simple command-line utilty for encoding and decoding bech32 strings.";
 
   inputs = {
-    nixpkgs.url = github:NixOS/nixpkgs/nixos-21.11;
+    nixpkgs.url = github:NixOS/nixpkgs/nixos-unstable;
     import-cargo.url = github:edolstra/import-cargo;
+    utils.url = github:numtide/flake-utils;
   };
 
-  outputs = { self, nixpkgs, import-cargo }:
-    let
-      inherit (import-cargo.builders) importCargo;
-    in
-    {
+  outputs = { self, nixpkgs, import-cargo, utils }:
+    utils.lib.eachDefaultSystem
+      (system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+          inherit (import-cargo.builders) importCargo;
+          crates = (importCargo { lockFile = ./Cargo.lock; inherit pkgs; }).cargoHome;
+        in
+        with pkgs;
+        {
+          defaultPackage = stdenv.mkDerivation
+            {
+              name = "bech32";
+              src = self;
 
-      defaultPackage.x86_64-linux =
-        with import nixpkgs { system = "x86_64-linux"; };
-        stdenv.mkDerivation {
-          name = "bech32";
-          src = self;
+              nativeBuildInputs = [ crates rustc cargo ];
 
-          nativeBuildInputs = [
-            (importCargo { lockFile = ./Cargo.lock; inherit pkgs; }).cargoHome
-            rustc
-            cargo
-          ];
+              buildPhase = ''
+                cargo build --release --offline
+              '';
 
-          buildPhase = ''
-            cargo build --release --offline
-          '';
-
-          installPhase = ''
-            install -Dm775 ./target/release/bech32 $out/bin/bech32
-          '';
-        };
-    };
+              installPhase = ''
+                install -Dm775 ./target/release/bech32 $out/bin/bech32
+              '';
+            };
+          devShell = mkShell { packages = [ rustc cargo ]; };
+        }
+      );
 }
