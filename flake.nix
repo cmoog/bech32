@@ -23,12 +23,16 @@
               installPhase = "install -Dm775 ./target/release/bech32 $out/bin/bech32";
             };
           bech32-docker = with pkgs; import ./docker.nix { inherit bech32; inherit (pkgs) dockerTools; };
+          bech32-app = {
+            type = "app";
+            program = "${bech32}/bin/bech32";
+          };
         in
         {
           packages = { inherit bech32 bech32-docker; };
-          apps = { inherit bech32; };
           defaultPackage = bech32;
-          defaultApp = bech32;
+          apps = { bech32 = bech32-app; };
+          defaultApp = bech32-app;
           devShell = with pkgs; mkShell {
             packages = [ cargo rustc rust-analyzer rustfmt ];
             RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
