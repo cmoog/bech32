@@ -1,5 +1,5 @@
-use bech32::{self, FromBase32, ToBase32};
-use clap::{App, Arg};
+use bech32::{self, FromBase32, ToBase32, Variant};
+use clap::{Arg, Command};
 use std::io::{stdin, stdout, Read, Write};
 use std::process;
 use std::str;
@@ -9,23 +9,23 @@ const ARG_DECODE: &str = "decode";
 const ARG_PREFIX: &str = "prefix";
 
 fn main() {
-    let matches = App::new("bech32")
+    let matches = Command::new("bech32")
         .version("0.1.0")
         .arg(
-            Arg::with_name(ARG_DATA)
+            Arg::new(ARG_DATA)
                 .takes_value(true)
                 .help("Data to encode or decode. Leave empty to use stdin."),
         )
         .arg(
-            Arg::with_name(ARG_DECODE)
-                .short("d")
+            Arg::new(ARG_DECODE)
+                .short('d')
                 .long("decode")
                 .help("Decode data. The human-readable prefix is discarded."),
         )
         .arg(
-            Arg::with_name(ARG_PREFIX)
+            Arg::new(ARG_PREFIX)
                 .long("prefix")
-                .short("p")
+                .short('p')
                 .takes_value(true)
                 .help(
                     "The human-readable part of the encoded bech32 string.
@@ -63,17 +63,16 @@ fn process_buf(matches: &clap::ArgMatches, data: Vec<u8>) -> Result<()> {
             // ensures compatibility with simple usages of "echo", "cat", etc.
             .trim_end_matches("\n");
 
-        let (_, base32) = bech32::decode(raw)?;
+        let (_, base32, _) = bech32::decode(raw)?;
         let buf = Vec::<u8>::from_base32(&base32)?;
         stdout().write_all(buf.as_slice())?;
     } else {
-        let hrp = matches
-            .value_of(ARG_PREFIX)
-            .ok_or(clap::Error::with_description(
-                "--prefix required for encoding",
-                clap::ErrorKind::ArgumentConflict,
-            ))?;
-        let s = bech32::encode(hrp, data.to_base32())?;
+        let hrp = matches.value_of(ARG_PREFIX).ok_or(clap::Error::raw(
+            clap::ErrorKind::ArgumentConflict,
+            "--prefix required for encoding",
+        ))?;
+        // TODO: add CLI flag for variant
+        let s = bech32::encode(hrp, data.to_base32(), Variant::Bech32)?;
         println!("{}", s);
     }
     Ok(())
