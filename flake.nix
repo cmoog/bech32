@@ -17,7 +17,7 @@
         in
         with pkgs;
         {
-          defaultPackage = stdenv.mkDerivation {
+          packages.default = stdenv.mkDerivation {
             name = "bech32";
             src = self;
 
@@ -31,9 +31,9 @@
               install -Dm775 ./target/release/bech32 $out/bin/bech32
             '';
           };
-          devShell = mkShell {
+          devShells.default = mkShell {
             packages = [ cargo rustc rust-analyzer rustfmt ];
-            RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
+            RUST_SRC_PATH = rustPlatform.rustLibSrc;
           };
         }
       );
