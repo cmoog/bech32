@@ -10,8 +10,10 @@ jobs:
       - uses: cachix/cachix-action@v10
         with:
           name: bech32
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-      - name: Build
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+      - name: Build Docker Image
+        run: nix build .#bech32-docker
+      - name: Build Linux Binary
         run: nix build
       - name: Upload
         uses: actions/upload-artifact@v2
