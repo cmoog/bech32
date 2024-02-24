@@ -11,21 +11,26 @@
   };
 
   outputs = { self, nixpkgs, naersk, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = import nixpkgs { inherit system; };
-        naersk' = pkgs.callPackage naersk { };
-        bech32 = naersk'.buildPackage {
-          src = ./.;
-        };
-      in
-      {
-        formatter = pkgs.nixpkgs-fmt;
-        packages = { default = bech32; inherit bech32; };
-        devShells.default = with pkgs; mkShell {
-          packages = [ cargo rustc rust-analyzer rustfmt ];
-          RUST_SRC_PATH = rustPlatform.rustLibSrc;
-        };
-      }
-    );
+    flake-utils.lib.eachDefaultSystem
+      (system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+          naersk' = pkgs.callPackage naersk { };
+          bech32 = naersk'.buildPackage {
+            src = ./.;
+          };
+        in
+        {
+          formatter = pkgs.nixpkgs-fmt;
+          packages.default = bech32;
+          devShells.default = with pkgs; mkShell {
+            packages = [ cargo rustc rust-analyzer rustfmt ];
+            RUST_SRC_PATH = rustPlatform.rustLibSrc;
+          };
+        }
+      ) // {
+      hydraJobs = {
+        inherit (self) packages devShells;
+      };
+    };
 }
